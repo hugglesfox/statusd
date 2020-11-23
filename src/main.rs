@@ -9,6 +9,7 @@
 //! changes are required in order to customise the status bar.
 extern crate pretty_env_logger;
 
+use log::info;
 use std::thread;
 use std::time::Duration;
 
@@ -18,7 +19,10 @@ mod notifications;
 mod xsetroot;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    pretty_env_logger::init();
+    pretty_env_logger::init_custom_env("STATUSD_LOG");
+
+    info!("Starting statusd...");
+
     let system = zbus::Connection::new_system()?;
     let session = zbus::Connection::new_session()?;
 
