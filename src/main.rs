@@ -10,13 +10,17 @@
 use std::thread;
 use std::time::Duration;
 
+mod battery;
 mod clock;
 mod xsetroot;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let connection = zbus::Connection::new_system()?;
+    let bat = battery::Battery::new(&connection)?;
+
     loop {
         // The status line format
-        let status = format!("{}", clock::Clock);
+        let status = format!("{} | {} | {}", bat, clock::Clock);
 
         xsetroot::name(status)?;
         thread::sleep(Duration::from_secs(5))
