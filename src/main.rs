@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         // The status line format
-        let status = format!("{} | {} | {}", notif, bat, clock::Clock);
+        let status = format!(" {} | {} | {}", notif, bat, clock::Clock);
 
         xsetroot::name(status)?;
         thread::sleep(Duration::from_secs(5))
