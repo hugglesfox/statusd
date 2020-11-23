@@ -3,6 +3,7 @@ use std::fmt;
 use zbus::dbus_proxy;
 use zbus::fdo;
 
+/// Notifyd dbus interface
 #[dbus_proxy(
     interface = "org.freedesktop.Notifications",
     default_path = "/org/freedesktop/Notifications"
