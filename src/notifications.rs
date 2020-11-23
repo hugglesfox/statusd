@@ -27,6 +27,6 @@ impl Notifications<'_> {
 
 impl fmt::Display for Notifications<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.proxy.get_notification_count.unwrap())
+        write!(f, "{}", self.proxy.get_notification_count().unwrap())
     }
 }
