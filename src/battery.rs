@@ -10,9 +10,10 @@ use zbus::fdo;
 )]
 trait Upower {
     #[dbus_proxy(property)]
-    fn time_to_empty(&self) -> fdo::Result<u64>;
+    fn time_to_empty(&self) -> fdo::Result<i64>;
+
     #[dbus_proxy(property)]
-    fn time_to_full(&self) -> fdo::Result<u64>;
+    fn time_to_full(&self) -> fdo::Result<i64>;
 }
 
 /// A battery status module
