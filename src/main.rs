@@ -12,15 +12,19 @@ use std::time::Duration;
 
 mod battery;
 mod clock;
+mod notifications;
 mod xsetroot;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let connection = zbus::Connection::new_system()?;
-    let bat = battery::Battery::new(&connection)?;
+    let system = zbus::Connection::new_system()?;
+    let session = zbus::Connection::new_session()?;
+
+    let bat = battery::Battery::new(&system)?;
+    let notif = notifications::Notifications::new(&session)?;
 
     loop {
         // The status line format
-        let status = format!("{} | {} | {}", bat, clock::Clock);
+        let status = format!("{} | {} | {}", notif, bat, clock::Clock);
 
         xsetroot::name(status)?;
         thread::sleep(Duration::from_secs(5))
