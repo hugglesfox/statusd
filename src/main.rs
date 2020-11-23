@@ -7,6 +7,8 @@
 //! [`std::fmt::Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html)
 //! in order to control how it's displayed. Although this means that source code
 //! changes are required in order to customise the status bar.
+extern crate pretty_env_logger;
+
 use std::thread;
 use std::time::Duration;
 
@@ -16,6 +18,7 @@ mod notifications;
 mod xsetroot;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    pretty_env_logger::init();
     let system = zbus::Connection::new_system()?;
     let session = zbus::Connection::new_session()?;
 

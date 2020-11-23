@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use log::error;
 use std::fmt;
 use zbus::dbus_proxy;
 use zbus::fdo;
@@ -35,7 +36,13 @@ impl Battery<'_> {
 impl fmt::Display for Battery<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Whilst discharging, time_to_full() is 0 and vice versa
-        let time = self.proxy.time_to_full().unwrap() + self.proxy.time_to_empty().unwrap();
+        let time = self.proxy.time_to_full().unwrap_or_else(|e| {
+            error!("Unable to connect to upowerd: {}", e);
+            0
+        }) + self.proxy.time_to_empty().unwrap_or_else(|e| {
+            error!("Unable to connect to upowerd, {}", e);
+            0
+        });
         write!(
             f,
             "{}",

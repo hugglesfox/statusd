@@ -1,3 +1,4 @@
+use log::error;
 use std::fmt;
 use zbus::dbus_proxy;
 use zbus::fdo;
@@ -27,6 +28,13 @@ impl Notifications<'_> {
 
 impl fmt::Display for Notifications<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.proxy.get_notification_count().unwrap())
+        write!(
+            f,
+            "{}",
+            self.proxy.get_notification_count().unwrap_or_else(|e| {
+                error!("Unable to connect to notifyd: {}", e);
+                0
+            })
+        )
     }
 }
