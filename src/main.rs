@@ -30,10 +30,8 @@ async fn main() -> Result<()> {
     while let Some(notif) = rx.recv().await {
         xsetroot::name(format!("{}, {}", notif.summary, notif.body)).ok();
 
-        // Ensure that the status bar can't update more then once per second
+        // Ensure that the status bar can't update until a notification expires
         sleep(Duration::from_millis(notif.expire_timeout as u64)).await;
-
-        xsetroot::name("").ok();
     }
 
     Ok(())
