@@ -1,38 +1,31 @@
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::time::sleep;
-use zbus::{ConnectionBuilder, Result};
 
-mod dbus;
+mod notifications;
 mod xsetroot;
 
-pub const BUS_NAME: &str = "org.freedesktop.Notifications";
-pub const OBJ_PATH: &str = "/org/freedesktop/Notifications";
+pub struct Status {
+    /// The text to display
+    pub text: String,
+    /// The minimum amount of time to display the status
+    pub timeout: u64,
+}
 
-pub struct Notification {
-    pub summary: String,
-    pub body: String,
-    pub expire_timeout: i32,
+impl Status {
+    pub fn new(text: String, timeout: u64) -> Self {
+        Self { text, timeout }
+    }
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let (tx, mut rx) = mpsc::channel::<Notification>(10);
+async fn main() {
+    let (tx, mut rx) = mpsc::channel::<Status>(1);
 
-    let interface = dbus::Interface::new(tx);
+    tokio::spawn(notifications::server(tx.clone()));
 
-    let _connection = ConnectionBuilder::session()?
-        .name(BUS_NAME)?
-        .serve_at(OBJ_PATH, interface)?
-        .build()
-        .await?;
-
-    while let Some(notif) = rx.recv().await {
-        xsetroot::name(format!("{}, {}", notif.summary, notif.body)).ok();
-
-        // Ensure that the status bar can't update until a notification expires
-        sleep(Duration::from_millis(notif.expire_timeout as u64)).await;
+    while let Some(status) = rx.recv().await {
+        xsetroot::name(status.text).ok();
+        sleep(Duration::from_millis(status.timeout)).await;
     }
-
-    Ok(())
 }

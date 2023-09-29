@@ -1,8 +1,8 @@
-use crate::Notification;
+use crate::Status;
 use std::collections::HashMap;
 use tokio::sync::mpsc::Sender;
 use zbus::zvariant::Value;
-use zbus::{dbus_interface, Result, SignalContext};
+use zbus::{dbus_interface, Result, SignalContext, ConnectionBuilder};
 
 /// DBus notification interface
 ///
@@ -11,11 +11,11 @@ use zbus::{dbus_interface, Result, SignalContext};
 /// for more information.
 pub struct Interface {
     id: u32,
-    channel: Sender<Notification>,
+    channel: Sender<Status>,
 }
 
 impl Interface {
-    pub fn new(channel: Sender<Notification>) -> Self {
+    pub fn new(channel: Sender<Status>) -> Self {
         Self { id: 0, channel }
     }
 }
@@ -39,24 +39,20 @@ impl Interface {
         body: String,
         _actions: Vec<String>,
         _hints: HashMap<&str, Value<'_>>,
-        mut expire_timeout: i32,
+        expire_timeout: i32,
     ) -> u32 {
         // Close the previous notification, telling the client that the notification expired
         Self::notification_closed(&ctxt, self.id, 1).await.ok();
-            
+
         self.id = self.id.wrapping_add(1);
 
-        expire_timeout = match expire_timeout {
+        let timeout = match expire_timeout {
             -1 | 0 => 1000,
             _ => expire_timeout,
         };
 
         self.channel
-            .send(Notification {
-                summary,
-                body,
-                expire_timeout,
-            })
+            .send(Status::new(format!("{}; {}", summary, body), timeout as u64))
             .await
             .unwrap();
 
@@ -82,15 +78,19 @@ impl Interface {
 
     #[dbus_interface(signal)]
     async fn notification_closed(ctx: &SignalContext<'_>, id: u32, reason: u32) -> Result<()> {}
+}
 
-    // #[dbus_interface(signal)]
-    // async fn action_invoked(ctx: &SignalContext<'_>, id: u32, action_key: String) -> Result<()> {}
+/// A server task
+pub async fn server(channel: Sender<Status>) -> Result<()> {
+    let interface = Interface::new(channel);
 
-    // #[dbus_interface(signal)]
-    // async fn activation_token(
-    //     ctx: &SignalContext<'_>,
-    //     id: u32,
-    //     activation_token: String,
-    // ) -> Result<()> {
-    // }
+    let _connection = ConnectionBuilder::session()?
+        .name("org.freedesktop.Notifications")?
+        .serve_at("/org/freedesktop/Notifications", interface)?
+        .build()
+        .await?;
+
+    loop {
+        std::future::pending().await
+    }
 }
