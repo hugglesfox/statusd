@@ -1,4 +1,5 @@
 //! Reimplementation of some of xsetroot(1)
+
 use std::ffi::CString;
 use std::ptr;
 use x11::xlib;
