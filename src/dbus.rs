@@ -65,7 +65,9 @@ impl Interface {
 
     /// Close a notification
     async fn close_notification(&self, #[zbus(signal_context)] ctxt: SignalContext<'_>, id: u32) {
-        Self::notification_closed(&ctxt, id, 3).await.unwrap();
+
+        // We can't actually close a notification, so we just pretend that we did
+        Self::notification_closed(&ctxt, id, 3).await.ok();
     }
 
     /// Get information about the notification server
